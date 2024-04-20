@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "618335465507",
+    "project_id": "yumify-7e3de",
+    "storage_bucket": "yumify-7e3de.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:618335465507:android:c8545400b5cedbecd80196",
+        "android_client_info": {
+          "package_name": "com.example.yumify"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5mZvPDyhnBl4PZREJ-xQJKdlX3mf7oMw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
