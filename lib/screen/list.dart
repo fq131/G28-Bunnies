@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-// import 'package:google_maps_webservice/places.dart';
 import 'package:realm/realm.dart';
 import 'package:yumify/utilities/localdb.dart';
+import 'package:yumify/utilities/location_service.dart';
 
 class ListPage extends StatefulWidget {
-  // constructor
   const ListPage({super.key});
 
   @override
@@ -21,6 +20,10 @@ class ListPageState extends State<ListPage> {
       items = data;
     });
   }
+
+  List<String> _restaurantSuggestions = [];
+  final TextEditingController _restaurantSuggestionsController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -58,7 +61,26 @@ class ListPageState extends State<ListPage> {
                 border: OutlineInputBorder(),
                 hintText: "Fill your desire restaurant",
               ),
+              onChanged: (input) {
+                _fetchRestaurantSuggestions(input);
+              },
             ),
+            if (_restaurantSuggestions.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _restaurantSuggestions.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_restaurantSuggestions[index]),
+                      onTap: () {
+                        _restName.text = _restaurantSuggestions[index];
+                        _restaurantSuggestions.clear();
+                        _restaurantSuggestionsController.clear();
+                      },
+                    );
+                  },
+                ),
+              ),
             const SizedBox(height: 20),
             Center(
               child: ElevatedButton(
@@ -71,6 +93,8 @@ class ListPageState extends State<ListPage> {
                   }
 
                   _restName.text = "";
+                  _restaurantSuggestions.clear();
+                  _restaurantSuggestionsController.clear();
 
                   //after create update, bottom sheet drop
                   Navigator.of(context).pop();
@@ -130,6 +154,20 @@ class ListPageState extends State<ListPage> {
       content: Text("Restaurant Deleted"),
     ));
     _refreshData();
+  }
+
+  Future<void> _fetchRestaurantSuggestions(String input) async {
+    if (input.isNotEmpty) {
+      try {
+        List<String> suggestions =
+            await LocationService().getRestaurantSuggestions(input);
+        setState(() {
+          _restaurantSuggestions = suggestions;
+        });
+      } catch (e) {
+        debugPrint('Error fetching restaurant suggestions: $e');
+      }
+    }
   }
 
   @override
