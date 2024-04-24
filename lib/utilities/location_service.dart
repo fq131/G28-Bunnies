@@ -1,5 +1,3 @@
-//used for location.dart
-
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
@@ -53,5 +51,26 @@ class LocationService {
     print(results);
 
     return results;
+  }
+
+  Future<List<String>> getRestaurantSuggestions(String input) async {
+    final String url =
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&types=establishment&key=$key';
+
+    var response = await http.get(Uri.parse(url));
+    var json = convert.jsonDecode(response.body);
+
+    if (json['predictions'] != null) {
+      List<String> suggestions = json['predictions'].map<String>((prediction) {
+        // Extract only the main part of the prediction
+        String description = prediction['description'] as String;
+        // Split the description by commas and take the first part
+        return description.split(',')[0].trim();
+      }).toList();
+
+      return suggestions;
+    } else {
+      throw Exception('Failed to load restaurant suggestions');
+    }
   }
 }
