@@ -1,5 +1,3 @@
-//bug: if key in destination not available, system stop
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -18,7 +16,6 @@ class LocationPageState extends State<LocationPage> {
   Set<Marker> _markers = Set<Marker>();
   Set<Polygon> _polygons = Set<Polygon>();
   Set<Polyline> _polylines = Set<Polyline>();
-  TextEditingController _destinationController = TextEditingController();
   Position? locationData;
   bool _locationFetched = false;
 
@@ -26,6 +23,9 @@ class LocationPageState extends State<LocationPage> {
 
   int _polygonIdCounter = 1;
   int _polylineIdCounter = 1;
+
+  TextEditingController _autocompleteController = TextEditingController();
+  List<String> _restaurantSuggestions = [];
 
   @override
   void initState() {
@@ -107,6 +107,20 @@ class LocationPageState extends State<LocationPage> {
     );
   }
 
+  Future<void> _fetchRestaurantSuggestions(String input) async {
+    if (input.isNotEmpty) {
+      try {
+        List<String> suggestions =
+            await LocationService().getRestaurantSuggestions(input);
+        setState(() {
+          _restaurantSuggestions = suggestions;
+        });
+      } catch (e) {
+        debugPrint('Error fetching restaurant suggestions: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,20 +136,40 @@ class LocationPageState extends State<LocationPage> {
       body: Column(
         children: [
           TextFormField(
-            controller: _destinationController,
-            decoration: InputDecoration(hintText: 'Destination'),
+            controller: _autocompleteController,
+            decoration: InputDecoration(hintText: 'Search Restaurant'),
+            onChanged: (value) {
+              _fetchRestaurantSuggestions(value);
+            },
           ),
+          if (_autocompleteController.text.isNotEmpty)
+            Expanded(
+              child: ListView.builder(
+                itemCount: _restaurantSuggestions.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_restaurantSuggestions[index]),
+                    onTap: () {
+                      _autocompleteController.text =
+                          _restaurantSuggestions[index];
+                    },
+                  );
+                },
+              ),
+            ),
           IconButton(
             onPressed: () async {
               if (locationData != null) {
                 var directions = await LocationService().getDirections(
                   '${locationData!.latitude},${locationData!.longitude}',
-                  _destinationController.text,
+                  _autocompleteController.text,
                 );
                 if (directions['polyline_decoded'] != null) {
                   setState(() {
                     _polylines.clear();
                     _setPolyline(directions['polyline_decoded']);
+                    _autocompleteController.clear();
+                    _restaurantSuggestions.clear();
                   });
                   _goToPlace(
                     LatLng(
